@@ -91,35 +91,3 @@ def api_field(request, field_id):
         field.delete()
         return Response(status=HTTP_204_NO_CONTENT)
     
-@api_view(['POST'])
-def register(request):
-    serializer = RegisterSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    serializer.save()
-    return Response(
-        {"message": "User registered successfully"},
-        status=status.HTTP_201_CREATED
-        )
-
-@api_view(['POST'])
-def login(request):
-    email = request.data.get('email')
-    password = request.data.get('password')
-
-    user = Users.objects.filter(email__iexact=email).first()
-
-    if not user or not check_password(password, user.password_hash):
-        return Response(
-            {"error": "Invalid email or password"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    refresh = RefreshToken()
-    refresh['user_id'] = user.user_id
-    refresh['user_type'] = user.user_type
-
-    return Response({
-        "access": str(refresh.access_token),
-        "refresh": str(refresh),
-        "user_type": user.user_type
-    })

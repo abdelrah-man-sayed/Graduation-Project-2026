@@ -8,6 +8,4 @@ urlpatterns = [
     path('booking/<int:booking_id>/', api_booking, name='api_booking'),
     path('fields/', api_fields, name='api_fields'),
     path('field/<int:field_id>/', api_field, name='api_field'),
-    path('auth/register/', register),
-    path('auth/login/', login),
 ]
