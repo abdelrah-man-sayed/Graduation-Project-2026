@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from myapp.models import *
+from myapp.models import Users, Bookings, Fields
 from django.contrib.auth.hashers import make_password
 
 class UserSerializer(serializers.ModelSerializer):
