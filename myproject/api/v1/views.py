@@ -9,6 +9,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from .permissions import IsOwner, IsPlayer
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 @api_view(['POST'])
@@ -16,11 +17,19 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 def signup(request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
+        user = serializer.save()
+        
+        refresh = RefreshToken.for_user(user)
+        
         return Response({
             "message": "User created successfully",
-            "user": serializer.data
+            "user": serializer.data,
+            "tokens": {
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            }
         }, status=status.HTTP_201_CREATED)
+    
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginDataView(TokenObtainPairView):
