@@ -10,27 +10,54 @@ from rest_framework.permissions import AllowAny
 from .permissions import IsOwner, IsPlayer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def signup(request):
     serializer = UserSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
-        
+    serializer.is_valid(raise_exception=True)
+    
+    user = serializer.save()
+    refresh = RefreshToken.for_user(user)
+    
+    return Response({
+        "message": "User created successfully",
+        "user": serializer.data,
+        "tokens": {
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+        }
+    }, status=status.HTTP_201_CREATED)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login(request):
+    email = request.data.get('email')
+    password = request.data.get('password')
+
+    if not email or not password:
+        from rest_framework.exceptions import ValidationError
+        raise ValidationError({"detail": "Email and password are required."})
+
+    user = authenticate(username=email, password=password)
+
+    if user is not None:
         refresh = RefreshToken.for_user(user)
+        serializer = UserSerializer(user)
         
         return Response({
-            "message": "User created successfully",
+            "message": "Login successful",
             "user": serializer.data,
             "tokens": {
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
             }
-        }, status=status.HTTP_201_CREATED)
+        }, status=status.HTTP_200_OK)
     
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    from rest_framework.exceptions import AuthenticationFailed
+    raise AuthenticationFailed({"detail": "Invalid email or password."})
 
 class LoginDataView(TokenObtainPairView):
     serializer_class = LoginDataSerializer

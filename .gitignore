@@ -1,2 +1,22 @@
 # Created by venv; see https://docs.python.org/3/library/venv.html
 *
+# البيئة الافتراضية (أهم حاجة)
+venv/
+env/
+Include/
+Lib/
+Scripts/
+pyvenv.cfg
+
+# ملفات الكاش
+__pycache__/
+*.py[cod]
+
+# قاعدة البيانات المحلية
+*.sqlite3
+
+# إعدادات الـ VS Code
+.vscode/
+
+# ملفات الصور المرفوعة (Media)
+media/
