@@ -162,3 +162,9 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 AUTH_USER_MODEL = 'myapp.Users'
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://graduation-project-2026-production.up.railway.app',
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
