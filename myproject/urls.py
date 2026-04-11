@@ -23,3 +23,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include('api.v1.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+from django.contrib.auth import get_user_model
+try:
+    User = get_user_model()
+    if not User.objects.filter(email='admin@example.com').exists():
+        User.objects.create_superuser('admin', 'admin@example.com', 'password123')
+        print("SUPERUSER CREATED SUCCESSFULLY!")
+except:
+    pass
