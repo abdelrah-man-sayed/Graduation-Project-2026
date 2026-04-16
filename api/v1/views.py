@@ -1,6 +1,6 @@
 from datetime import datetime
 from django.db.models import Q
-from .serializers import FieldImageSerializer, LoginDataSerializer, UserSerializer, BookingsSerializer, FieldsSerializer, LoginRequestSerializer
+from .serializers import AuthResponseSerializer, FieldImageSerializer, LoginDataSerializer, UserSerializer, BookingsSerializer, FieldsSerializer, LoginRequestSerializer
 from myapp.models import FieldImages, Users, Bookings, Fields
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status, permissions, serializers
@@ -15,8 +15,8 @@ from drf_spectacular.utils import extend_schema, OpenApiExample
 
 @extend_schema(
     request=UserSerializer,
-    responses={201: UserSerializer},
-    description="إنشاء حساب جديد للمستخدم"
+    responses={201: AuthResponseSerializer}, # الرد في حالة إنشاء مستخدم جديد
+    description="إنشاء حساب ويرجع معاه الـ Tokens فوراً"
 )
 
 @api_view(['POST'])
@@ -39,8 +39,8 @@ def signup(request):
 
 @extend_schema(
     request=LoginRequestSerializer,
-    responses={200: UserSerializer},
-    description="تسجيل دخول المستخدم عن طريق البريد الإلكتروني وكلمة المرور"
+    responses={200: AuthResponseSerializer},
+    description="تسجيل دخول ويرجع معاه الـ Tokens"
 )
 
 @api_view(['POST'])
