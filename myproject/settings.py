@@ -175,7 +175,14 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': 'dzxfvr6ph',
     'API_KEY': '976912375823279',
