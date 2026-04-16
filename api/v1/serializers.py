@@ -63,3 +63,7 @@ class LoginDataSerializer(TokenObtainPairSerializer):
         data['full_name'] = self.user.full_name
         data['user_id'] = self.user.id
         return data
+
+class LoginRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)

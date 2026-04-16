@@ -1,6 +1,6 @@
 from datetime import datetime
 from django.db.models import Q
-from .serializers import FieldImageSerializer, LoginDataSerializer, UserSerializer, BookingsSerializer, FieldsSerializer
+from .serializers import FieldImageSerializer, LoginDataSerializer, UserSerializer, BookingsSerializer, FieldsSerializer, LoginRequestSerializer
 from myapp.models import FieldImages, Users, Bookings, Fields
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status, permissions, serializers
@@ -11,7 +11,13 @@ from .permissions import IsOwner, IsPlayer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
+from drf_spectacular.utils import extend_schema, OpenApiExample
 
+@extend_schema(
+    request=UserSerializer,
+    responses={201: UserSerializer},
+    description="إنشاء حساب جديد للمستخدم"
+)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -30,6 +36,12 @@ def signup(request):
             "access": str(refresh.access_token),
         }
     }, status=status.HTTP_201_CREATED)
+
+@extend_schema(
+    request=LoginRequestSerializer,
+    responses={200: UserSerializer},
+    description="تسجيل دخول المستخدم عن طريق البريد الإلكتروني وكلمة المرور"
+)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
