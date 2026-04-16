@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'api',
     'rest_framework',
     'rest_framework_simplejwt',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -149,6 +150,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 from datetime import timedelta
 
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
@@ -156,6 +158,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated', 
     ),
     'EXCEPTION_HANDLER': 'api.v1.exceptions.custom_exception_handler',
+
 }
 
 SIMPLE_JWT = {
@@ -190,3 +193,9 @@ CLOUDINARY_STORAGE = {
 }
 
 
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Field Booking API (Graduation Project 2026)',
+    'DESCRIPTION': 'API documentation for managing soccer fields and bookings',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
