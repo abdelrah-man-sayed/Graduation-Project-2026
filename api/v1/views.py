@@ -38,6 +38,7 @@ def signup(request):
     }, status=status.HTTP_201_CREATED)
 
 @extend_schema(
+    operation_id="custom_user_login",    
     request=LoginRequestSerializer,
     responses={200: AuthResponseSerializer},
     description="تسجيل دخول ويرجع معاه الـ Tokens"
