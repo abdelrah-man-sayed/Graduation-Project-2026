@@ -72,6 +72,12 @@ def login(request):
     from rest_framework.exceptions import AuthenticationFailed
     raise AuthenticationFailed({"detail": "Invalid email or password."})
 
+@extend_schema(
+    request=LoginRequestSerializer,
+    responses={200: AuthResponseSerializer},
+    description="تسجيل الدخول والحصول على الـ Access والـ Refresh tokens"
+)
+
 class LoginDataView(TokenObtainPairView):
     serializer_class = LoginDataSerializer
 
