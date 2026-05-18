@@ -253,7 +253,8 @@ def request_otp(request):
         send_mail(subject, message, settings.EMAIL_HOST_USER, [email])
         return Response({"message": "تم إرسال كود الـ OTP إلى بريدك الإلكتروني بنجاح."}, status=status.HTTP_200_OK)
     except Exception as e:
-        return Response({"detail": "حدث خطأ أثناء إرسال الإيميل، برجاء المحاولة لاحقاً."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # هنطبع الخطأ الحقيقي اللي راجع من السيرفر
+        return Response({"detail": f"Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @extend_schema(request=ResetPasswordWithOTPSerializer)
 @api_view(['POST'])
