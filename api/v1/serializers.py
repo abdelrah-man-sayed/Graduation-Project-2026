@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from myapp.models import FieldImages, Users, Bookings, Fields
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+import random
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -76,3 +77,16 @@ class AuthResponseSerializer(serializers.Serializer):
     message = serializers.CharField()
     user = UserSerializer() 
     tokens = TokenSerializer()
+
+class RequestOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not Users.objects.filter(email=value).exists():
+            raise serializers.ValidationError("هذا البريد الإلكتروني غير مسجل لدينا!")
+        return value
+
+class ResetPasswordWithOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6)
+    new_password = serializers.CharField(write_only=True)

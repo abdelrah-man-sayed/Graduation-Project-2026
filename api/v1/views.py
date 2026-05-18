@@ -4,6 +4,8 @@ from django.db.models import Sum
 from rest_framework.views import APIView
 from datetime import datetime
 from django.db.models import Q
+
+from myproject import settings
 from .serializers import AuthResponseSerializer, FieldImageSerializer, LoginDataSerializer, UserSerializer, BookingsSerializer, FieldsSerializer, LoginRequestSerializer
 from myapp.models import FieldImages, Users, Bookings, Fields
 from rest_framework.viewsets import ModelViewSet
@@ -16,6 +18,10 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from drf_spectacular.utils import extend_schema, OpenApiExample
+from django.core.mail import send_mail
+import random
+from myapp.models import PasswordResetOTP
+from .serializers import RequestOTPSerializer, ResetPasswordWithOTPSerializer
 
 @extend_schema(
     request=UserSerializer,
@@ -223,3 +229,55 @@ class OwnerDashboardAPIView(APIView):
             "total_courts": total_courts,
             "weekly_revenue_chart": chart_data
         }, status=status.HTTP_200_OK)
+    
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def request_otp(request):
+    serializer = RequestOTPSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    
+    email = serializer.validated_data['email']
+    
+    # توليد كود عشوائي من 6 أرقام
+    otp_code = str(random.randint(100000, 999999))
+    
+    # حفظ الكود في الداتا بيز (مسح الأكواد القديمة للإيميل ده أولاً)
+    PasswordResetOTP.objects.filter(email=email).delete()
+    PasswordResetOTP.objects.create(email=email, otp=otp_code)
+    
+    # إرسال الإيميل
+    subject = "كود إعادة تعيين كلمة المرور - ملاعبنا"
+    message = f"كود التحقق الخاص بك هو: {otp_code}\nصالح لفترة محدودة، برجاء عدم مشاركته مع أحد."
+    
+    try:
+        send_mail(subject, message, settings.EMAIL_HOST_USER, [email])
+        return Response({"message": "تم إرسال كود الـ OTP إلى بريدك الإلكتروني بنجاح."}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"detail": "حدث خطأ أثناء إرسال الإيميل، برجاء المحاولة لاحقاً."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_password_with_otp(request):
+    serializer = ResetPasswordWithOTPSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    
+    email = serializer.validated_data['email']
+    otp = serializer.validated_data['otp']
+    new_password = serializer.validated_data['new_password']
+    
+    # التأكد من صحة الكود
+    otp_record = PasswordResetOTP.objects.filter(email=email, otp=otp).first()
+    
+    if not otp_record:
+        return Response({"detail": "كود التحقق غير صحيح أو منتهي الصلاحية!"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # تغيير كلمة المرور للمستخدم
+    user = Users.objects.get(email=email)
+    user.set_password(new_password)
+    user.save()
+    
+    # مسح الكود بعد الاستخدام الناجح
+    otp_record.delete()
+    
+    return Response({"message": "تم تغيير كلمة المرور بنجاح، يمكنك تسجيل الدخول الآن."}, status=status.HTTP_200_OK)

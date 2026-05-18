@@ -16,5 +16,7 @@ urlpatterns = [
     path('auth/login/', views.LoginDataView.as_view(), name='token_obtain_pair'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('owner/dashboard/', views.OwnerDashboardAPIView.as_view(), name='owner-dashboard'),
+    path('auth/request-otp/', views.request_otp, name='request_otp'),
+    path('auth/reset-password-otp/', views.reset_password_with_otp, name='reset_password_otp'),
     path('', include(router.urls)),
 ]
