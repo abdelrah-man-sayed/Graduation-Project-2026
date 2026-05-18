@@ -15,5 +15,6 @@ urlpatterns = [
     path('auth/signup/', views.signup, name='signup'),
     path('auth/login/', views.LoginDataView.as_view(), name='token_obtain_pair'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('owner/dashboard/', views.OwnerDashboardAPIView.as_view(), name='owner-dashboard'),
     path('', include(router.urls)),
 ]

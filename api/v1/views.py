@@ -1,3 +1,7 @@
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Sum
+from rest_framework.views import APIView
 from datetime import datetime
 from django.db.models import Q
 from .serializers import AuthResponseSerializer, FieldImageSerializer, LoginDataSerializer, UserSerializer, BookingsSerializer, FieldsSerializer, LoginRequestSerializer
@@ -139,8 +143,18 @@ class BookingsViewSet(ModelViewSet):
         )
 
 class FieldsViewSet(ModelViewSet):
-    queryset = Fields.objects.all()
     serializer_class = FieldsSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        
+        # إذا كان المستخدم مسجل دخول ونوعه صاحب ملعب (Owner)، يرى ملاعبه هو فقط
+        if user.is_authenticated and user.user_type == 'owner':
+            return Fields.objects.filter(owner=user).order_by('-created_at')
+            
+        # للاعبين أو الزوار (في حالة AllowAny)، يتم عرض جميع الملاعب
+        return Fields.objects.all().order_by('-created_at')
+
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsOwner()]
@@ -157,3 +171,54 @@ class FieldImagesViewSet(ModelViewSet):
         if self.action in ['create', 'update', 'destroy']:
             return [IsOwner()]
         return [permissions.AllowAny()]
+    
+class OwnerDashboardAPIView(APIView):
+    permission_classes = [IsOwner]
+
+    def get(self, request):
+        user = request.user
+        # تحديد تواريخ اليوم وآخر 7 أيام
+        today = timezone.localdate()
+        seven_days_ago = today - timedelta(days=6) 
+
+        # 1. إجمالي الملاعب (Total Courts)
+        owner_fields = Fields.objects.filter(owner=user)
+        total_courts = owner_fields.count()
+
+        # استخراج كل حجوزات ملاعب هذا المالك
+        owner_bookings = Bookings.objects.filter(field__in=owner_fields)
+
+        # 2. الطلبات المعلقة (Pending Requests)
+        pending_requests = owner_bookings.filter(status='pending').count()
+
+        # 3. حجوزات اليوم (Today's Bookings)
+        today_bookings = owner_bookings.filter(booking_date=today).count()
+
+        # 4. أرباح هذا الأسبوع (Earnings This Week)
+        # هنجمع الفلوس للحجوزات المؤكدة في آخر 7 أيام
+        weekly_bookings = owner_bookings.filter(
+            booking_date__range=[seven_days_ago, today],
+            status='confirmed'
+        )
+        earnings_this_week = weekly_bookings.aggregate(total=Sum('total_price'))['total'] or 0.0
+
+        # 5. بيانات الرسم البياني (Weekly Revenue Chart)
+        # هنعمل لوب على آخر 7 أيام عشان نطلع ربح كل يوم لوحده
+        chart_data = []
+        for i in range(7):
+            current_day = seven_days_ago + timedelta(days=i)
+            daily_total = weekly_bookings.filter(booking_date=current_day).aggregate(total=Sum('total_price'))['total'] or 0.0
+            
+            chart_data.append({
+                "day": current_day.strftime("%a"), # بيطبع اسم اليوم زي: Mon, Tue, Wed
+                "revenue": float(daily_total)
+            })
+
+        # تجميع كل الداتا في رد واحد (Response)
+        return Response({
+            "today_bookings": today_bookings,
+            "earnings_this_week": float(earnings_this_week),
+            "pending_requests": pending_requests,
+            "total_courts": total_courts,
+            "weekly_revenue_chart": chart_data
+        }, status=status.HTTP_200_OK)
