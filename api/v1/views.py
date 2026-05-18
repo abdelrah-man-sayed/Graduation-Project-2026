@@ -4,7 +4,6 @@ from django.db.models import Sum
 from rest_framework.views import APIView
 from datetime import datetime
 from django.db.models import Q
-
 from myproject import settings
 from .serializers import AuthResponseSerializer, FieldImageSerializer, LoginDataSerializer, UserSerializer, BookingsSerializer, FieldsSerializer, LoginRequestSerializer
 from myapp.models import FieldImages, Users, Bookings, Fields
@@ -230,6 +229,7 @@ class OwnerDashboardAPIView(APIView):
             "weekly_revenue_chart": chart_data
         }, status=status.HTTP_200_OK)
     
+@extend_schema(request=RequestOTPSerializer)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def request_otp(request):
@@ -255,7 +255,7 @@ def request_otp(request):
     except Exception as e:
         return Response({"detail": "حدث خطأ أثناء إرسال الإيميل، برجاء المحاولة لاحقاً."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
+@extend_schema(request=ResetPasswordWithOTPSerializer)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def reset_password_with_otp(request):
