@@ -143,6 +143,7 @@ class BookingsViewSet(ModelViewSet):
         )
 
 class FieldsViewSet(ModelViewSet):
+    queryset = Fields.objects.all()
     serializer_class = FieldsSerializer
 
     def get_queryset(self):
