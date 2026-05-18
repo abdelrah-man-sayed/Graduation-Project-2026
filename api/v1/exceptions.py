@@ -5,10 +5,22 @@ def custom_exception_handler(exc, context):
     response = exception_handler(exc, context)
 
     if response is not None:
+        # هناخد أول رسالة خطأ حقيقية راجعة من السيرفر
+        first_error_msg = ""
+        if isinstance(response.data, dict):
+            for key, value in response.data.items():
+                if isinstance(value, list):
+                    first_error_msg = str(value[0])
+                else:
+                    first_error_msg = str(value)
+                break
+        elif isinstance(response.data, list):
+            first_error_msg = str(response.data[0])
+
         custom_data = {
             "error": {
                 "code": response.status_code,
-                "message": "Required parameter: q",
+                "message": first_error_msg or "حدث خطأ غير معروف",
                 "errors": []
             }
         }
@@ -17,9 +29,9 @@ def custom_exception_handler(exc, context):
             for field, messages in response.data.items():
                 msg = messages[0] if isinstance(messages, list) else messages
                 custom_data["error"]["errors"].append({
-                    "message": f"Required parameter: {field}",
-                    "domain": "global",
-                    "reason": "required"
+                    "message": str(msg),
+                    "domain": field,
+                    "reason": "invalid_input"
                 })
         
         response.data = custom_data
