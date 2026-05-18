@@ -97,10 +97,16 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 #     }
 # }
 DATABASES = {
-    'default': dj_database_url.config(
-        default='postgresql://neondb_owner:npg_1bXJCMILSRa7@ep-twilight-shadow-agyrzfo7-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default='postgres://postgres:2004@localhost:5432/mala3bna_db'
+#     )
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
