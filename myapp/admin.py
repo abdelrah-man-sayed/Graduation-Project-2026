@@ -11,5 +11,5 @@ class FieldImageInline(admin.TabularInline):
 
 @admin.register(Fields)
 class FieldsAdmin(admin.ModelAdmin):
-    list_display = ('name', 'owner', 'price_per_hour', 'location')
+    list_display = ('name', 'owner', 'price_per_hour', 'address')
     inlines = [FieldImageInline]

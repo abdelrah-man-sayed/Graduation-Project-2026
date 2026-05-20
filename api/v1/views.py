@@ -21,10 +21,11 @@ from django.core.mail import send_mail
 import random
 from myapp.models import PasswordResetOTP
 from .serializers import RequestOTPSerializer, ResetPasswordWithOTPSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
 
 @extend_schema(
     request=UserSerializer,
-    responses={201: AuthResponseSerializer}, # الرد في حالة إنشاء مستخدم جديد
+    responses={201: AuthResponseSerializer},
     description="إنشاء حساب ويرجع معاه الـ Tokens فوراً"
 )
 
@@ -150,15 +151,12 @@ class BookingsViewSet(ModelViewSet):
 class FieldsViewSet(ModelViewSet):
     queryset = Fields.objects.all()
     serializer_class = FieldsSerializer
+    parser_classes = (MultiPartParser, FormParser)
 
     def get_queryset(self):
         user = self.request.user
-        
-        # إذا كان المستخدم مسجل دخول ونوعه صاحب ملعب (Owner)، يرى ملاعبه هو فقط
         if user.is_authenticated and user.user_type == 'owner':
             return Fields.objects.filter(owner=user).order_by('-created_at')
-            
-        # للاعبين أو الزوار (في حالة AllowAny)، يتم عرض جميع الملاعب
         return Fields.objects.all().order_by('-created_at')
 
     def get_permissions(self):
@@ -183,44 +181,35 @@ class OwnerDashboardAPIView(APIView):
 
     def get(self, request):
         user = request.user
-        # تحديد تواريخ اليوم وآخر 7 أيام
+
         today = timezone.localdate()
         seven_days_ago = today - timedelta(days=6) 
 
-        # 1. إجمالي الملاعب (Total Courts)
         owner_fields = Fields.objects.filter(owner=user)
         total_courts = owner_fields.count()
 
-        # استخراج كل حجوزات ملاعب هذا المالك
         owner_bookings = Bookings.objects.filter(field__in=owner_fields)
 
-        # 2. الطلبات المعلقة (Pending Requests)
         pending_requests = owner_bookings.filter(status='pending').count()
 
-        # 3. حجوزات اليوم (Today's Bookings)
         today_bookings = owner_bookings.filter(booking_date=today).count()
 
-        # 4. أرباح هذا الأسبوع (Earnings This Week)
-        # هنجمع الفلوس للحجوزات المؤكدة في آخر 7 أيام
         weekly_bookings = owner_bookings.filter(
             booking_date__range=[seven_days_ago, today],
             status='confirmed'
         )
         earnings_this_week = weekly_bookings.aggregate(total=Sum('total_price'))['total'] or 0.0
 
-        # 5. بيانات الرسم البياني (Weekly Revenue Chart)
-        # هنعمل لوب على آخر 7 أيام عشان نطلع ربح كل يوم لوحده
         chart_data = []
         for i in range(7):
             current_day = seven_days_ago + timedelta(days=i)
             daily_total = weekly_bookings.filter(booking_date=current_day).aggregate(total=Sum('total_price'))['total'] or 0.0
             
             chart_data.append({
-                "day": current_day.strftime("%a"), # بيطبع اسم اليوم زي: Mon, Tue, Wed
+                "day": current_day.strftime("%a"),
                 "revenue": float(daily_total)
             })
 
-        # تجميع كل الداتا في رد واحد (Response)
         return Response({
             "today_bookings": today_bookings,
             "earnings_this_week": float(earnings_this_week),
@@ -238,14 +227,11 @@ def request_otp(request):
     
     email = serializer.validated_data['email']
     
-    # توليد كود عشوائي من 6 أرقام
     otp_code = str(random.randint(100000, 999999))
     
-    # حفظ الكود في الداتا بيز (مسح الأكواد القديمة للإيميل ده أولاً)
     PasswordResetOTP.objects.filter(email=email).delete()
     PasswordResetOTP.objects.create(email=email, otp=otp_code)
     
-    # إرسال الإيميل
     subject = "كود إعادة تعيين كلمة المرور - ملاعبنا"
     message = f"كود التحقق الخاص بك هو: {otp_code}\nصالح لفترة محدودة، برجاء عدم مشاركته مع أحد."
     
@@ -253,7 +239,6 @@ def request_otp(request):
         send_mail(subject, message, settings.EMAIL_HOST_USER, [email])
         return Response({"message": "تم إرسال كود الـ OTP إلى بريدك الإلكتروني بنجاح."}, status=status.HTTP_200_OK)
     except Exception as e:
-        # هنطبع الخطأ الحقيقي اللي راجع من السيرفر
         return Response({"detail": f"Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @extend_schema(request=ResetPasswordWithOTPSerializer)
@@ -267,18 +252,15 @@ def reset_password_with_otp(request):
     otp = serializer.validated_data['otp']
     new_password = serializer.validated_data['new_password']
     
-    # التأكد من صحة الكود
     otp_record = PasswordResetOTP.objects.filter(email=email, otp=otp).first()
     
     if not otp_record:
         return Response({"detail": "كود التحقق غير صحيح أو منتهي الصلاحية!"}, status=status.HTTP_400_BAD_REQUEST)
     
-    # تغيير كلمة المرور للمستخدم
     user = Users.objects.get(email=email)
     user.set_password(new_password)
     user.save()
     
-    # مسح الكود بعد الاستخدام الناجح
     otp_record.delete()
     
     return Response({"message": "تم تغيير كلمة المرور بنجاح، يمكنك تسجيل الدخول الآن."}, status=status.HTTP_200_OK)

@@ -49,13 +49,29 @@ class FieldImageSerializer(serializers.ModelSerializer):
         extra_kwargs = {'field': {'required': False}}
         
 class FieldsSerializer(serializers.ModelSerializer):
-    images = FieldImageSerializer(many=True, read_only=True)
+    field_images = FieldImageSerializer(many=True, read_only=True) 
     owner_name = serializers.ReadOnlyField(source='owner.full_name')
     owner = serializers.ReadOnlyField(source='owner.id')
+
+    uploaded_images = serializers.ListField(
+        child=serializers.ImageField(max_length=1000000, allow_empty_file=False, use_url=False),
+        write_only=True,
+        required=False
+    )
 
     class Meta:
         model = Fields
         fields = '__all__'
+
+    def create(self, validated_data):
+        uploaded_images = validated_data.pop('uploaded_images', [])
+        
+        field = Fields.objects.create(**validated_data)
+        
+        for image in uploaded_images:
+            FieldImages.objects.create(field=field, image=image)
+            
+        return field
 
 class LoginDataSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):

@@ -5,7 +5,6 @@ def custom_exception_handler(exc, context):
     response = exception_handler(exc, context)
 
     if response is not None:
-        # هناخد أول رسالة خطأ حقيقية راجعة من السيرفر
         first_error_msg = ""
         if isinstance(response.data, dict):
             for key, value in response.data.items():

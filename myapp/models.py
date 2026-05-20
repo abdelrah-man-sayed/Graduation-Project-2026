@@ -23,11 +23,17 @@ class Fields(models.Model):
     owner = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='fields')
     name = models.CharField(max_length=100)
     sport_type = models.CharField(max_length=50, default='Football')
-    location = models.CharField(max_length=255)
+    address = models.CharField(max_length=255) # غيرنا الاسم هنا
     latitude = models.DecimalField(max_digits=12, decimal_places=9, null=True, blank=True)
     longitude = models.DecimalField(max_digits=12, decimal_places=9, null=True, blank=True)
     price_per_hour = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField(blank=True, null=True)
+    
+    has_lights = models.BooleanField(default=False)
+    has_showers = models.BooleanField(default=False)
+    has_cafe = models.BooleanField(default=False)
+    has_equipment = models.BooleanField(default=False)
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
