@@ -22,6 +22,7 @@ import random
 from myapp.models import PasswordResetOTP
 from .serializers import RequestOTPSerializer, ResetPasswordWithOTPSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.decorators import action
 
 @extend_schema(
     request=UserSerializer,
@@ -100,17 +101,25 @@ class BookingsViewSet(ModelViewSet):
     serializer_class = BookingsSerializer
 
     def get_queryset(self):
-            user = self.request.user
-            
-            if user.user_type == 'owner':
-                return Bookings.objects.filter(field__owner=user).order_by('-created_at')
-            
-            return Bookings.objects.filter(user=user).order_by('-created_at')
+        user = self.request.user
+        queryset = Bookings.objects.all()
+
+        if user.is_authenticated and user.user_type == 'owner':
+            queryset = queryset.filter(field__owner=user)
+        else:
+            queryset = queryset.filter(user=user)
+
+        status_param = self.request.query_params.get('status', None)
+        if status_param in ['pending', 'confirmed', 'cancelled']:
+            queryset = queryset.filter(status=status_param)
+
+        return queryset.order_by('-created_at')
 
     def get_permissions(self):
         if self.action == 'create':
             return [IsPlayer()]
-        
+        if self.action in ['accept', 'decline']:
+            return [IsOwner()]
         return [permissions.IsAuthenticated()]
 
     def perform_create(self, serializer):
@@ -147,6 +156,32 @@ class BookingsViewSet(ModelViewSet):
             total_price=calculated_total_price, 
             status='pending'
         )
+
+    # ==========================================
+    # Custom Actions (زراير القبول والرفض)
+    # ==========================================
+    
+    @action(detail=True, methods=['post'])
+    def accept(self, request, pk=None):
+        booking = self.get_object()
+        
+        if booking.status != 'pending':
+            return Response({"detail": "لا يمكن تغيير حالة حجز غير معلق."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        booking.status = 'confirmed'
+        booking.save()
+        return Response({"message": "تم قبول الحجز بنجاح.", "status": "confirmed"}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def decline(self, request, pk=None):
+        booking = self.get_object()
+        
+        if booking.status != 'pending':
+            return Response({"detail": "لا يمكن تغيير حالة حجز غير معلق."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        booking.status = 'cancelled'
+        booking.save()
+        return Response({"message": "تم رفض الحجز بنجاح.", "status": "cancelled"}, status=status.HTTP_200_OK)
 
 class FieldsViewSet(ModelViewSet):
     queryset = Fields.objects.all()

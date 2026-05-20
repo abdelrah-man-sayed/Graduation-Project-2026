@@ -24,7 +24,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 class BookingsSerializer(serializers.ModelSerializer):
     player_name = serializers.ReadOnlyField(source='user.full_name')
+    player_image = serializers.ImageField(source='user.profile_image', read_only=True)
     field_name = serializers.ReadOnlyField(source='field.name')
+    sport_type = serializers.ReadOnlyField(source='field.sport_type')
+    
+    duration = serializers.SerializerMethodField()
 
     class Meta:
         model = Bookings
@@ -32,16 +36,27 @@ class BookingsSerializer(serializers.ModelSerializer):
             'booking_id', 
             'user',
             'player_name', 
+            'player_image', 
             'field', 
             'field_name', 
+            'sport_type',  
             'booking_date', 
             'start_time', 
             'end_time', 
+            'duration',     
             'total_price', 
             'status', 
             'created_at'
         ]
         read_only_fields = ['status', 'user', 'total_price']
+
+    def get_duration(self, obj):
+        from datetime import datetime
+        dt1 = datetime.combine(datetime.min, obj.start_time)
+        dt2 = datetime.combine(datetime.min, obj.end_time)
+        duration_hours = (dt2 - dt1).total_seconds() / 3600
+        return duration_hours
+    
 class FieldImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = FieldImages
