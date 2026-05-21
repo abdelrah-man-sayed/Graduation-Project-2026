@@ -215,3 +215,6 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'bedosayed74@gmail.com'
 EMAIL_HOST_PASSWORD = 'wkphhwtbqxkfsdmi'
+
+import cloudinary
+cloudinary.config(api_proxy="http://proxy.server:3128")
