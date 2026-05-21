@@ -196,8 +196,10 @@ CLOUDINARY_STORAGE = {
     'CLOUD_NAME': 'dzxfvr6ph',
     'API_KEY': '976912375823279',
     'API_SECRET': 'rJbm9rRsl_-l5htZdxW5oQvfxJM',
-    'api_proxy': 'http://proxy.server:3128'
+    'API_PROXY': 'http://proxy.server:3128'
 }
+import cloudinary
+cloudinary.config(api_proxy='http://proxy.server:3128')
 
 
 SPECTACULAR_SETTINGS = {
