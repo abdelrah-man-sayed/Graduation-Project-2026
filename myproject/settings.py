@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 import dj_database_url
+os.environ['http_proxy'] = 'http://proxy.server:3128'
+os.environ['https_proxy'] = 'http://proxy.server:3128'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -198,8 +200,6 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': 'rJbm9rRsl_-l5htZdxW5oQvfxJM',
     'API_PROXY': 'http://proxy.server:3128'
 }
-import cloudinary
-cloudinary.config(api_proxy='http://proxy.server:3128')
 
 
 SPECTACULAR_SETTINGS = {
