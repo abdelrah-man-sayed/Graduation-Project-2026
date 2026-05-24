@@ -41,9 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'cloudinary_storage',
+    # 'cloudinary_storage',
     'django.contrib.staticfiles',
-    'cloudinary',
+    # 'cloudinary',
     'corsheaders',
     'myapp',
     'api',
@@ -182,24 +182,24 @@ CSRF_TRUSTED_ORIGINS = [
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
+# import cloudinary
+# import cloudinary.uploader
+# import cloudinary.api
 
 STORAGES = {
-    "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
-    },
+    # "default": {
+    #     "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    # },
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'dzxfvr6ph',
-    'API_KEY': '976912375823279',
-    'API_SECRET': 'rJbm9rRsl_-l5htZdxW5oQvfxJM',
-    'API_PROXY': 'http://proxy.server:3128'
-}
+# CLOUDINARY_STORAGE = {
+#     'CLOUD_NAME': 'dzxfvr6ph',
+#     'API_KEY': '976912375823279',
+#     'API_SECRET': 'rJbm9rRsl_-l5htZdxW5oQvfxJM',
+#     'API_PROXY': 'http://proxy.server:3128'
+# }
 
 
 SPECTACULAR_SETTINGS = {
@@ -215,6 +215,3 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'bedosayed74@gmail.com'
 EMAIL_HOST_PASSWORD = 'wkphhwtbqxkfsdmi'
-
-import cloudinary
-cloudinary.config(api_proxy="http://proxy.server:3128")
