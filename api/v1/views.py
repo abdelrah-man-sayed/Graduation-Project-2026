@@ -5,13 +5,13 @@ from rest_framework.views import APIView
 from datetime import datetime
 from django.db.models import Q
 from myproject import settings
-from .serializers import AuthResponseSerializer, FieldImageSerializer, LoginDataSerializer, UserSerializer, BookingsSerializer, FieldsSerializer, LoginRequestSerializer
+from .serializers import AuthResponseSerializer, FieldImageSerializer, LoginDataSerializer, UserSerializer, BookingsSerializer, FieldsSerializer, LoginRequestSerializer, UserProfileSerializer
 from myapp.models import FieldImages, Users, Bookings, Fields
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status, permissions, serializers
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from .permissions import IsOwner, IsPlayer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -23,6 +23,7 @@ from myapp.models import PasswordResetOTP
 from .serializers import RequestOTPSerializer, ResetPasswordWithOTPSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import action
+from rest_framework.generics import RetrieveUpdateAPIView
 
 @extend_schema(
     request=UserSerializer,
@@ -316,3 +317,11 @@ def reset_password_with_otp(request):
     otp_record.delete()
     
     return Response({"message": "تم تغيير كلمة المرور بنجاح، يمكنك تسجيل الدخول الآن."}, status=status.HTTP_200_OK)
+
+class UserProfileView(RetrieveUpdateAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)
+
+    def get_object(self):
+        return self.request.user

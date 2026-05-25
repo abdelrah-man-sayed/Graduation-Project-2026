@@ -1,26 +1,47 @@
 from rest_framework import serializers
 from myapp.models import FieldImages, Users, Bookings, Fields
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-import random
+from django.contrib.auth import get_user_model
 
+Users = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    username = serializers.CharField(required=False)
 
     class Meta:
         model = Users
         fields = ['id', 'full_name', 'email', 'password', 'phone_number', 'user_type', 'profile_image']
 
     def create(self, validated_data):
+
+        email = validated_data['email']
+        default_username = email.split('@')[0]
+        username = validated_data.get('username', default_username)
+
         user = Users.objects.create_user(
-            username=validated_data['email'],
-            email=validated_data['email'],
+            username=username,
+            email=email,
             password=validated_data['password'],
             full_name=validated_data.get('full_name', ''),
             phone_number=validated_data.get('phone_number', ''),
             user_type=validated_data.get('user_type', 'player')
         )
+
+        if 'profile_image' in validated_data:
+            user.profile_image = validated_data['profile_image']
+            user.save()
         return user
+    
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Users
+        fields = [
+            'id', 'username', 'full_name', 'email', 'phone_number', 
+            'bio', 'profile_image', 
+            'instagram_link', 'tiktok_link', 'facebook_link'
+        ]
+        read_only_fields = ['email']
 
 class BookingsSerializer(serializers.ModelSerializer):
     player_name = serializers.ReadOnlyField(source='user.full_name')

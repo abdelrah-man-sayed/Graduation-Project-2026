@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 class Users(AbstractUser):
     full_name = models.CharField(max_length=150, blank=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
+    bio = models.TextField(null=True, blank=True)
     user_type = models.CharField(
         max_length=20, 
         choices=[('player', 'Player'), ('owner', 'Owner'), ('admin', 'Admin')],
@@ -11,6 +12,10 @@ class Users(AbstractUser):
     )
     profile_image = models.ImageField(upload_to='profiles/', blank=True, null=True)
     email = models.EmailField(unique=True)
+
+    instagram_link = models.URLField(max_length=200, null=True, blank=True)
+    tiktok_link = models.URLField(max_length=200, null=True, blank=True)
+    facebook_link = models.URLField(max_length=200, null=True, blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
