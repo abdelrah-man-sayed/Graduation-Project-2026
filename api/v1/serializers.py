@@ -30,6 +30,16 @@ class BookingsSerializer(serializers.ModelSerializer):
     
     duration = serializers.SerializerMethodField()
 
+    def validate(self, attrs):
+        field = attrs.get('field') 
+        
+        if field and not field.is_active:
+            raise serializers.ValidationError(
+                {"error": "عذراً، هذا الملعب مغلق حالياً ولا يمكن الحجز عليه."}
+            )
+            
+        return super().validate(attrs)
+
     class Meta:
         model = Bookings
         fields = [

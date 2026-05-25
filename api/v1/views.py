@@ -192,7 +192,7 @@ class FieldsViewSet(ModelViewSet):
         user = self.request.user
         if user.is_authenticated and user.user_type == 'owner':
             return Fields.objects.filter(owner=user).order_by('-created_at')
-        return Fields.objects.all().order_by('-created_at')
+        return Fields.objects.filter(is_active=True).order_by('-created_at')
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
@@ -201,6 +201,23 @@ class FieldsViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    @action(detail=True, methods=['post'], url_path='toggle-status')
+    def toggle_status(self, request, pk=None):
+        field = self.get_object() 
+        
+        field.is_active = not field.is_active
+        field.save()
+        
+        status_word = "مفعل" if field.is_active else "موقوف"
+        
+        return Response(
+            {
+                "message": f"تم تغيير حالة الملعب بنجاح. الملعب الآن {status_word}.",
+                "is_active": field.is_active
+            },
+            status=status.HTTP_200_OK
+        )
 
 class FieldImagesViewSet(ModelViewSet):
     queryset = FieldImages.objects.all()
