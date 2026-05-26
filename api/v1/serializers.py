@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from myapp.models import FieldImages, Users, Bookings, Fields
+from myapp.models import FieldImages, Users, Bookings, Fields, Review
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
 
@@ -152,3 +152,26 @@ class ResetPasswordWithOTPSerializer(serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.CharField(max_length=6)
     new_password = serializers.CharField(write_only=True)
+
+class ReviewSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    user_image = serializers.ImageField(source='user.profile_image', read_only=True)
+
+    class Meta:
+        model = Review
+        fields = ['id', 'field', 'user', 'user_name', 'user_image', 'rating', 'comment', 'created_at']
+        read_only_fields = ['user']
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        field = attrs['field']
+
+        if Review.objects.filter(user=user, field=field).exists():
+            raise serializers.ValidationError("لقد قمت بتقييم هذا الملعب من قبل.")
+
+        has_booked = Bookings.objects.filter(user=user, field=field, status='confirmed').exists()
+        
+        if not has_booked:
+            raise serializers.ValidationError("عذراً، لا يمكنك تقييم ملعب لم تقم بحجزه مسبقاً.")
+
+        return attrs
