@@ -345,6 +345,10 @@ class ReviewViewSet(ModelViewSet):
             queryset = queryset.filter(field_id=field_id)
         return queryset
     
+@extend_schema(
+    request=DeleteAccountSerializer,
+    description="حذف الحساب نهائياً باستخدام كلمة المرور الحالية. (تحذير: هذا الإجراء لا يمكن التراجع عنه)"
+)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def delete_account(request):
