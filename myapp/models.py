@@ -104,6 +104,7 @@ class Review(models.Model):
     field = models.ForeignKey(Fields, on_delete=models.CASCADE, related_name='reviews')
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
