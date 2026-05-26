@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class Users(AbstractUser):
     full_name = models.CharField(max_length=150, blank=True)
@@ -99,17 +100,17 @@ class Messages(models.Model):
     class Meta:
         db_table = 'messages'
 
-class Ratings(models.Model):
-    rating_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='ratings')
-    field = models.ForeignKey(Fields, on_delete=models.CASCADE, related_name='ratings')
-    rating_value = models.IntegerField() # من 1 لـ 5
-    comment = models.TextField(blank=True, null=True)
+class Review(models.Model):
+    field = models.ForeignKey(Fields, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'ratings'
-        unique_together = ('user', 'field') 
+        unique_together = ('field', 'user')
+        
+    def __str__(self):
+        return f"Review by {self.user.full_name} for {self.field.name}"
 
 class FieldImages(models.Model):
     image_id = models.AutoField(primary_key=True)
