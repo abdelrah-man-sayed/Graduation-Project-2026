@@ -185,3 +185,12 @@ class ReviewSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("عذراً، لا يمكنك تقييم ملعب لم تقم بحجزه مسبقاً.")
 
         return attrs
+    
+class DeleteAccountSerializer(serializers.Serializer):
+    password = serializers.CharField(write_only=True)
+
+    def validate_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("كلمة المرور غير صحيحة.")
+        return value

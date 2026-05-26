@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from datetime import datetime
 from django.db.models import Q
 from myproject import settings
-from .serializers import AuthResponseSerializer, FieldImageSerializer, LoginDataSerializer, UserSerializer, BookingsSerializer, FieldsSerializer, LoginRequestSerializer, UserProfileSerializer, ReviewSerializer, RequestOTPSerializer, ResetPasswordWithOTPSerializer
+from .serializers import AuthResponseSerializer, DeleteAccountSerializer, FieldImageSerializer, LoginDataSerializer, UserSerializer, BookingsSerializer, FieldsSerializer, LoginRequestSerializer, UserProfileSerializer, ReviewSerializer, RequestOTPSerializer, ResetPasswordWithOTPSerializer
 from myapp.models import FieldImages, Users, Bookings, Fields, Review
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status, permissions, serializers
@@ -344,3 +344,16 @@ class ReviewViewSet(ModelViewSet):
         if field_id:
             queryset = queryset.filter(field_id=field_id)
         return queryset
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def delete_account(request):
+    serializer = DeleteAccountSerializer(data=request.data, context={'request': request})
+    if serializer.is_valid():
+        user = request.user
+        user.delete() 
+        return Response(
+            {"message": "تم حذف الحساب وجميع البيانات المرتبطة به بنجاح."},
+            status=status.HTTP_200_OK
+        )
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

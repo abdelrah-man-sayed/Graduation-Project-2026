@@ -20,5 +20,6 @@ urlpatterns = [
     path('auth/request-otp/', views.request_otp, name='request_otp'),
     path('auth/reset-password-otp/', views.reset_password_with_otp, name='reset_password_otp'),
     path('users/me/', views.UserProfileView.as_view(), name='user-profile'),
+    path('users/me/delete-account/', views.delete_account, name='delete-account'),
     path('', include(router.urls)),
 ]
