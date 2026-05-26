@@ -2,6 +2,7 @@ from rest_framework import serializers
 from myapp.models import FieldImages, Users, Bookings, Fields, Review
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
+from django.db.models import Avg
 
 Users = get_user_model()
 
@@ -104,10 +105,19 @@ class FieldsSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
+    average_rating = serializers.SerializerMethodField()
+    reviews_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Fields
         fields = '__all__'
+
+    def get_average_rating(self, obj):
+        avg = obj.reviews.aggregate(Avg('rating'))['rating__avg']
+        return round(avg, 1) if avg else 0.0
+
+    def get_reviews_count(self, obj):
+        return obj.reviews.count()
 
     def create(self, validated_data):
         uploaded_images = validated_data.pop('uploaded_images', [])

@@ -5,8 +5,8 @@ from rest_framework.views import APIView
 from datetime import datetime
 from django.db.models import Q
 from myproject import settings
-from .serializers import AuthResponseSerializer, FieldImageSerializer, LoginDataSerializer, UserSerializer, BookingsSerializer, FieldsSerializer, LoginRequestSerializer, UserProfileSerializer
-from myapp.models import FieldImages, Users, Bookings, Fields
+from .serializers import AuthResponseSerializer, FieldImageSerializer, LoginDataSerializer, UserSerializer, BookingsSerializer, FieldsSerializer, LoginRequestSerializer, UserProfileSerializer, ReviewSerializer, RequestOTPSerializer, ResetPasswordWithOTPSerializer
+from myapp.models import FieldImages, Users, Bookings, Fields, Review
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status, permissions, serializers
 from rest_framework.response import Response
@@ -325,3 +325,22 @@ class UserProfileView(RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+    
+class ReviewViewSet(ModelViewSet):
+    queryset = Review.objects.all().order_by('-created_at')
+    serializer_class = ReviewSerializer
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        field_id = self.request.query_params.get('field_id')
+        if field_id:
+            queryset = queryset.filter(field_id=field_id)
+        return queryset

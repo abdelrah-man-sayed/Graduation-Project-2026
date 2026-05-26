@@ -10,6 +10,7 @@ router.register('users', views.UsersViewSet)
 router.register('bookings', views.BookingsViewSet)
 router.register('fields', views.FieldsViewSet)
 router.register('field_images', views.FieldImagesViewSet)
+router.register(r'reviews', views.ReviewViewSet, basename='reviews')
 
 urlpatterns = [
     path('auth/signup/', views.signup, name='signup'),
