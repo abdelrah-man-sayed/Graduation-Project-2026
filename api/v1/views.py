@@ -21,7 +21,7 @@ from django.core.mail import send_mail
 import random
 from myapp.models import PasswordResetOTP
 from .serializers import RequestOTPSerializer, ResetPasswordWithOTPSerializer
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.decorators import action
 from rest_framework.generics import RetrieveUpdateAPIView
 
@@ -209,7 +209,7 @@ class BookingsViewSet(ModelViewSet):
 class FieldsViewSet(ModelViewSet):
     queryset = Fields.objects.all()
     serializer_class = FieldsSerializer
-    parser_classes = (MultiPartParser, FormParser)
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
 
     def get_queryset(self):
         user = self.request.user
