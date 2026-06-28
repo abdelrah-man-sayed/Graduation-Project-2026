@@ -32,7 +32,7 @@ class Fields(models.Model):
     address = models.CharField(max_length=255)
     latitude = models.DecimalField(max_digits=12, decimal_places=9, null=True, blank=True)
     longitude = models.DecimalField(max_digits=12, decimal_places=9, null=True, blank=True)
-    
+
     price_per_hour = models.DecimalField(max_digits=10, decimal_places=2)
     
     off_peak_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -47,6 +47,22 @@ class Fields(models.Model):
 
     description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    
+    MAINTENANCE_CHOICES = [
+        ('lights', 'عطل في الإضاءة'),
+        ('turf', 'صيانة أرضية الملعب (النجيل)'),
+        ('facilities', 'صيانة في المرافق (الحمامات/المدرجات)'),
+        ('periodic', 'صيانة دورية للملعب'),
+        ('other', 'أسباب أخرى'),
+    ]
+    
+    maintenance_type = models.CharField(
+        max_length=50, 
+        choices=MAINTENANCE_CHOICES, 
+        null=True, 
+        blank=True
+    )
+    maintenance_description = models.TextField(null=True, blank=True)
     
     has_lights = models.BooleanField(default=False)
     has_showers = models.BooleanField(default=False)

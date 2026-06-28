@@ -150,6 +150,13 @@ class AuthResponseSerializer(serializers.Serializer):
     user = UserSerializer() 
     tokens = TokenSerializer()
 
+class FieldToggleStatusSerializer(serializers.Serializer):
+    maintenance_type = serializers.ChoiceField(
+        choices=[('lights', 'عطل في الإضاءة'), ('turf', 'صيانة أرضية الملعب'), ('facilities', 'صيانة في المرافق'), ('periodic', 'صيانة دورية'), ('other', 'أخرى')],
+        required=False
+    )
+    maintenance_description = serializers.CharField(required=False, allow_blank=True)
+
 class RequestOTPSerializer(serializers.Serializer):
     email = serializers.EmailField()
 

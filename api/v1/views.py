@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from datetime import datetime
 from django.db.models import Q
 from myproject import settings
-from .serializers import AuthResponseSerializer, DeleteAccountSerializer, FieldImageSerializer, LoginDataSerializer, UserSerializer, BookingsSerializer, FieldsSerializer, LoginRequestSerializer, UserProfileSerializer, ReviewSerializer, RequestOTPSerializer, ResetPasswordWithOTPSerializer
+from .serializers import AuthResponseSerializer, DeleteAccountSerializer, FieldImageSerializer, LoginDataSerializer, UserSerializer, BookingsSerializer, FieldsSerializer, LoginRequestSerializer, UserProfileSerializer, ReviewSerializer, RequestOTPSerializer, ResetPasswordWithOTPSerializer, FieldToggleStatusSerializer
 from myapp.models import FieldImages, Users, Bookings, Fields, Review
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status, permissions, serializers
@@ -225,22 +225,48 @@ class FieldsViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    @extend_schema(
+        request=FieldToggleStatusSerializer,
+        description="تغيير حالة الملعب (تشغيل/إيقاف). إذا كان الإجراء إيقاف، يجب إرسال نوع العطل وتفاصيله."
+    )
     @action(detail=True, methods=['post'], url_path='toggle-status')
     def toggle_status(self, request, pk=None):
-        field = self.get_object() 
+        field = self.get_object()
         
-        field.is_active = not field.is_active
-        field.save()
-        
-        status_word = "مفعل" if field.is_active else "موقوف"
-        
-        return Response(
-            {
-                "message": f"تم تغيير حالة الملعب بنجاح. الملعب الآن {status_word}.",
+        if field.is_active:
+            serializer = FieldToggleStatusSerializer(data=request.data)
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+            maintenance_type = serializer.validated_data.get('maintenance_type')
+            if not maintenance_type:
+                return Response(
+                    {"error": "يجب تحديد نوع العطل أو سبب إيقاف الملعب."}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            field.is_active = False
+            field.maintenance_type = maintenance_type
+            field.maintenance_description = serializer.validated_data.get('maintenance_description', '')
+            field.save()
+            
+            return Response({
+                "message": "تم إيقاف الملعب بنجاح وتسجيل سبب العطل.",
+                "is_active": field.is_active,
+                "maintenance_type": field.maintenance_type,
+                "maintenance_description": field.maintenance_description
+            }, status=status.HTTP_200_OK)
+            
+        else:
+            field.is_active = True
+            field.maintenance_type = None
+            field.maintenance_description = None
+            field.save()
+            
+            return Response({
+                "message": "تم إعادة تفعيل الملعب بنجاح وجعله متاحاً للحجز.",
                 "is_active": field.is_active
-            },
-            status=status.HTTP_200_OK
-        )
+            }, status=status.HTTP_200_OK)
 
 class FieldImagesViewSet(ModelViewSet):
     queryset = FieldImages.objects.all()
