@@ -32,9 +32,20 @@ class Fields(models.Model):
     address = models.CharField(max_length=255)
     latitude = models.DecimalField(max_digits=12, decimal_places=9, null=True, blank=True)
     longitude = models.DecimalField(max_digits=12, decimal_places=9, null=True, blank=True)
+    
     price_per_hour = models.DecimalField(max_digits=10, decimal_places=2)
-    description = models.TextField(blank=True, null=True)
+    
+    off_peak_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    off_peak_start_time = models.TimeField(null=True, blank=True)
+    off_peak_end_time = models.TimeField(null=True, blank=True)
 
+    peak_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    peak_start_time = models.TimeField(null=True, blank=True)
+    peak_end_time = models.TimeField(null=True, blank=True)
+
+    membership_discount = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
+
+    description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     
     has_lights = models.BooleanField(default=False)

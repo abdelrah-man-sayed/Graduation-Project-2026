@@ -141,26 +141,48 @@ class BookingsViewSet(ModelViewSet):
         if overlapping_bookings.exists():
             raise serializers.ValidationError("هذا الملعب محجوز بالفعل في هذا التوقيت!")
 
-        fmt = '%H:%M:%S'
-        t1 = datetime.strptime(str(start_time), fmt)
-        t2 = datetime.strptime(str(end_time), fmt)
+        from datetime import datetime
+        t1 = datetime.combine(datetime.today(), start_time)
+        t2 = datetime.combine(datetime.today(), end_time)
         
         duration_hours = (t2 - t1).total_seconds() / 3600
 
         if duration_hours <= 0:
             raise serializers.ValidationError("وقت الانتهاء يجب أن يكون بعد وقت البدء!")
 
-        calculated_total_price = float(field.price_per_hour) * duration_hours
+        base_price = float(field.price_per_hour)
+        
+        if field.peak_start_time and field.peak_end_time and field.peak_price:
+            peak_start_dt = datetime.combine(datetime.today(), field.peak_start_time)
+            peak_end_dt = datetime.combine(datetime.today(), field.peak_end_time)
+            
+            overlap_start = max(t1, peak_start_dt)
+            overlap_end = min(t2, peak_end_dt)
+            
+            if overlap_start < overlap_end:
+                peak_duration = (overlap_end - overlap_start).total_seconds() / 3600
+                off_peak_duration = duration_hours - peak_duration
+                
+                off_peak_rate = float(field.off_peak_price) if field.off_peak_price else base_price
+                peak_rate = float(field.peak_price)
+                
+                calculated_total_price = (peak_duration * peak_rate) + (off_peak_duration * off_peak_rate)
+            else:
+                off_peak_rate = float(field.off_peak_price) if field.off_peak_price else base_price
+                calculated_total_price = duration_hours * off_peak_rate
+        else:
+            calculated_total_price = duration_hours * base_price
+    
+        if field.membership_discount > 0:
+            discount_percentage = float(field.membership_discount) / 100.0
+            discount_amount = calculated_total_price * discount_percentage
+            calculated_total_price -= discount_amount
 
         serializer.save(
             user=self.request.user, 
             total_price=calculated_total_price, 
             status='pending'
         )
-
-    # ==========================================
-    # Custom Actions (زراير القبول والرفض)
-    # ==========================================
     
     @action(detail=True, methods=['post'])
     def accept(self, request, pk=None):
