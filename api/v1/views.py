@@ -215,7 +215,7 @@ class FieldsViewSet(ModelViewSet):
         user = self.request.user
         if user.is_authenticated and user.user_type == 'owner':
             return Fields.objects.filter(owner=user).order_by('-created_at')
-        return Fields.objects.filter(is_active=True).order_by('-created_at')
+        return Fields.objects.all()
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:

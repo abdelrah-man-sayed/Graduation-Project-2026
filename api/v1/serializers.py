@@ -2,7 +2,8 @@ from rest_framework import serializers
 from myapp.models import FieldImages, Users, Bookings, Fields, Review
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
-from django.db.models import Avg
+from django.db.models import Avg, Q
+from django.utils import timezone
 
 Users = get_user_model()
 
@@ -186,10 +187,21 @@ class ReviewSerializer(serializers.ModelSerializer):
         if Review.objects.filter(user=user, field=field).exists():
             raise serializers.ValidationError("لقد قمت بتقييم هذا الملعب من قبل.")
 
-        has_booked = Bookings.objects.filter(user=user, field=field, status='confirmed').exists()
+        confirmed_bookings = Bookings.objects.filter(user=user, field=field, status='confirmed')
         
-        if not has_booked:
+        if not confirmed_bookings.exists():
             raise serializers.ValidationError("عذراً، لا يمكنك تقييم ملعب لم تقم بحجزه مسبقاً.")
+
+        current_date = timezone.localdate()
+        current_time = timezone.localtime().time()
+
+        past_bookings = confirmed_bookings.filter(
+            Q(booking_date__lt=current_date) | 
+            Q(booking_date=current_date, end_time__lte=current_time)
+        )
+
+        if not past_bookings.exists():
+            raise serializers.ValidationError("عذراً، لا يمكنك تقييم الملعب إلا بعد انتهاء وقت الحجز الفعلي وممارسة اللعب.")
 
         return attrs
     
